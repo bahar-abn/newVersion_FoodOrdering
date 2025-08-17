@@ -11,16 +11,12 @@ class PaymentController extends Controller
 {
     public function process(Request $request, Order $order)
 {
-    // Validate order has a positive amount
     if ($order->total_price <= 0) {
         return back()->with('error', 'Order total must be greater than zero');
     }
 
-    // Fake gateway result
     $outcomes = ['success', 'failed', 'cancelled'];
     $status = $outcomes[array_rand($outcomes)];
-
-    // Persist payment history
     PaymentHistory::create([
         'order_id' => $order->id,
         'user_id' => $request->user()->id,
@@ -51,23 +47,18 @@ class PaymentController extends Controller
     }
     public function complete(Request $request, Order $order)
 {
-    // Verify the authenticated user owns this order
     if ($order->user_id !== auth()->id()) {
         abort(403, 'Unauthorized action.');
     }
-
-    // Validate the order can be completed
     if ($order->status !== 'pending') {
         return redirect()->route('orders.show', $order->id)
             ->with('error', 'Order cannot be completed in its current state');
     }
 
     return DB::transaction(function () use ($order, $request) {
-        // Simulate payment processing
         $outcomes = ['success', 'failed', 'cancelled'];
         $status = $outcomes[array_rand($outcomes)];
 
-        // Record payment history
         PaymentHistory::create([
             'order_id' => $order->id,
             'user_id' => $request->user()->id,
@@ -77,7 +68,6 @@ class PaymentController extends Controller
             'meta' => ['simulated' => true],
         ]);
 
-        // Update order status based on payment result
         $order->status = $status === 'success' ? 'completed' : $status;
         $order->save();
 
@@ -87,21 +77,17 @@ class PaymentController extends Controller
 }
 public function show(Order $order)
 {
-    // Verify the authenticated user owns this order
+    // Make sure the authenticated user owns this order
     if ($order->user_id !== auth()->id()) {
         abort(403, 'Unauthorized action.');
     }
 
-    // Only allow payment for pending orders
-    if ($order->status !== 'pending') {
-        return redirect()->route('orders.show', $order->id)
-            ->with('error', 'Only pending orders can be paid');
-    }
+    // Load items with menu data
+    $order->load('items'); // Assuming Order model's items() relation is correctly defined
+    $items = $order->items; // Collection of items
+    $total = $order->total ?? 0;
 
-    return view('payment.form', [
-        'order' => $order,
-        'items' => $order->items()->with('menu')->get(),
-        'total' => $order->total_price
-    ]);
+    return view('payment.form', compact('order', 'items', 'total'));
 }
+
 }

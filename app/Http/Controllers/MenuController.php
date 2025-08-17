@@ -9,7 +9,10 @@ class MenuController extends Controller
 {
     public function index()
     {
-        $items = Menu::with(['comments' => fn($q) => $q->latest()->limit(3)])->paginate(10);
+        // Get menu items with pagination (9 per page)
+        $items = Menu::paginate(9);
+
+        // Pass $items to Blade view
         return view('menu.index', compact('items'));
     }
 
@@ -58,4 +61,11 @@ class MenuController extends Controller
         $menu->delete();
         return redirect('/menu')->with('success', 'Food deleted');
     }
+    public function adminIndex()
+{
+    // Instead of all(), use paginate()
+    $items = Menu::orderBy('created_at', 'desc')->paginate(9); // 9 items per page
+    return view('menu.index', compact('items'));
+}
+
 }

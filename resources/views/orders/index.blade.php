@@ -10,9 +10,7 @@
                 <a href="{{ route('menu.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
                     Browse Menu
                 </a>
-                <a href="{{ route('cart.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-indigo-700 bg-white hover:bg-gray-50">
-                    View Cart
-                </a>
+                <!-- View Cart button removed -->
             </div>
         </div>
         

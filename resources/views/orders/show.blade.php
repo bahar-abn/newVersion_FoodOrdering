@@ -1,12 +1,16 @@
 @extends('layouts.app')
 
 @section('title', 'Order #' . $order->id)
+
 @section('content')
 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 py-8">
     <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row gap-8">
+
+            <!-- Order Details -->
             <div class="md:w-2/3">
                 <div class="bg-white rounded-lg shadow-md p-6">
+                    <!-- Header -->
                     <div class="flex justify-between items-start mb-6">
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900">Order #{{ $order->id }}</h1>
@@ -19,7 +23,8 @@
                             {{ ucfirst($order->status) }}
                         </span>
                     </div>
-                    
+
+                    <!-- Delivery Info -->
                     <div class="mb-6">
                         <h2 class="text-lg font-medium text-gray-900 mb-2">Delivery Information</h2>
                         <div class="bg-gray-50 p-4 rounded-lg">
@@ -30,7 +35,8 @@
                             @endif
                         </div>
                     </div>
-                    
+
+                    <!-- Order Items -->
                     <div>
                         <h2 class="text-lg font-medium text-gray-900 mb-2">Order Items</h2>
                         <div class="divide-y divide-gray-200">
@@ -58,24 +64,25 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Order Summary & Discount -->
             <div class="md:w-1/3">
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>
-                    
+
                     <div class="space-y-3">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Subtotal</span>
                             <span class="font-medium">${{ number_format($order->total_amount, 2) }}</span>
                         </div>
-                        
+
                         @if($order->discount_amount > 0)
                         <div class="flex justify-between">
                             <span class="text-green-600">Discount</span>
                             <span class="text-green-600">-${{ number_format($order->discount_amount, 2) }}</span>
                         </div>
                         @endif
-                        
+
                         <div class="border-t border-gray-200 pt-3 mt-3">
                             <div class="flex justify-between">
                                 <span class="font-bold">Total</span>
@@ -83,26 +90,29 @@
                             </div>
                         </div>
                     </div>
-                    
-                    @if($order->paymentHistory)
+
+                    <!-- Discount Code Form -->
+                    @if($order->status == 'pending' && !$order->paymentHistory)
                     <div class="mt-6">
-                        <h2 class="text-lg font-medium text-gray-900 mb-2">Payment Information</h2>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-gray-700"><strong>Status:</strong> 
-                                <span class="capitalize 
-                                    @if($order->paymentHistory->status == 'success') text-green-600
-                                    @else text-red-600 @endif">
-                                    {{ $order->paymentHistory->status }}
-                                </span>
-                            </p>
-                            <p class="text-gray-700"><strong>Amount:</strong> ${{ number_format($order->paymentHistory->amount, 2) }}</p>
-                            <p class="text-gray-700"><strong>Method:</strong> {{ ucfirst($order->paymentHistory->payment_method) }}</p>
-                            <p class="text-gray-700"><strong>Transaction ID:</strong> {{ $order->paymentHistory->transaction_id }}</p>
-                            <p class="text-gray-700"><strong>Date:</strong> {{ $order->paymentHistory->created_at->format('M d, Y \a\t h:i A') }}</p>
-                        </div>
+                        <form action="{{ route('discount.apply', $order->id) }}" method="POST" class="flex gap-2">
+                            @csrf
+                            <input type="text" name="discount_code" placeholder="Enter discount code" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                Apply
+                            </button>
+                        </form>
+
+                        @if($errors->has('discount_code'))
+                            <p class="text-red-600 text-sm mt-2">{{ $errors->first('discount_code') }}</p>
+                        @endif
+
+                        @if(session('discount'))
+                            <p class="text-green-600 text-sm mt-2">Discount applied: {{ session('discount')['code'] }} - ${{ number_format(session('discount')['amount'], 2) }}</p>
+                        @endif
                     </div>
                     @endif
-                    
+
+                    <!-- Payment Button -->
                     @if($order->status == 'pending' && !$order->paymentHistory)
                     <div class="mt-6">
                         <form action="{{ route('payment.complete', $order->id) }}" method="POST">
@@ -113,7 +123,8 @@
                         </form>
                     </div>
                     @endif
-                    
+
+                    <!-- Cancel Order Button -->
                     @if($order->status == 'pending')
                     <div class="mt-4">
                         <form action="{{ route('orders.cancel', $order->id) }}" method="POST">
@@ -125,8 +136,10 @@
                         </form>
                     </div>
                     @endif
+
                 </div>
             </div>
+
         </div>
     </div>
 </div>

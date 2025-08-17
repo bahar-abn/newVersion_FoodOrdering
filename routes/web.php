@@ -90,3 +90,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/{menu}', [MenuController::class, 'destroy'])->name('menu.destroy');
     });
 });
+
+
+

@@ -20,7 +20,6 @@ class SurveyController extends Controller
             ['rating' => $data['rating'], 'note' => $data['note'] ?? null]
         );
 
-        // Update average rating
         $avg = Survey::where('menu_id', $food->id)->avg('rating');
         $food->average_rating = round($avg, 2);
         $food->save();

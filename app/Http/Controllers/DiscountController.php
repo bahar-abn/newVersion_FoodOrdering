@@ -1,6 +1,4 @@
-<?php
-
-namespace App\Http\Controllers;
+<?php namespace App\Http\Controllers;
 
 use App\Models\Discount;
 use App\Models\Order;
@@ -8,27 +6,29 @@ use Illuminate\Http\Request;
 
 class DiscountController extends Controller
 {
-    public function apply(Request $request, string $code)
+    public function apply(Request $request, Order $order)
     {
-        $orderId = $request->query('order');
-        $order = Order::whereKey($orderId)->where('user_id', $request->user()->id)->firstOrFail();
+        $request->validate([
+            'discount_code' => 'required|string'
+        ]);
 
-        $discount = Discount::where('code', $code)->first();
-        if (!$discount || !$discount->isValid()) {
-            return back()->with('error', 'Invalid or expired discount code.');
+        $discount = Discount::where('code', $request->discount_code)
+    ->where(function ($q) {
+        $q->whereNull('valid_to')      // instead of valid_until
+          ->orWhere('valid_to', '>=', now());
+    })
+    ->first();
+
+
+        if (!$discount) {
+            return back()->withErrors(['discount_code' => 'Invalid or expired discount code']);
         }
 
-        $discountValue = 0;
-        if ($discount->type === 'percentage') {
-            $discountValue = round($order->subtotal * ($discount->percent/100), 2);
-        } else {
-            $discountValue = min($discount->amount, $order->subtotal);
-        }
-
-        $order->discount_total = $discountValue;
-        $order->total = max(0, $order->subtotal - $discountValue);
+        $order->discount_id = $discount->id;
+        $order->discount_total = $discount->amount;
+        $order->total = max($order->subtotal - $discount->amount, 0);
         $order->save();
 
-        return back()->with('success', 'Discount applied.');
+        return back()->with('success', 'Discount applied successfully!');
     }
 }
