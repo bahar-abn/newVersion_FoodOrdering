@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    
     public function ordersReport()
     {
         $orders = Order::with(['user', 'items.menu'])
@@ -20,7 +19,6 @@ class ReportController extends Controller
 
         return view('admin.reports.orders', compact('orders'));
     }
-
     
     public function popularFood()
     {
@@ -36,7 +34,6 @@ class ReportController extends Controller
         return view('admin.reports.popular', compact('popularItems'));
     }
 
-
     public function paymentReport()
     {
         $payments = Payment::with(['order', 'order.user'])
@@ -50,7 +47,6 @@ class ReportController extends Controller
             'totalRevenue' => $totalRevenue
         ]);
     }
-
  
     public function pendingComments()
     {
@@ -62,14 +58,12 @@ class ReportController extends Controller
         return view('admin.reports.comments', compact('comments'));
     }
 
-
     public function approveComment(Comment $comment)
     {
         $comment->update(['approved' => true]);
 
         return back()->with('success', 'Comment approved successfully');
     }
-
 
     public function rejectComment(Comment $comment)
     {

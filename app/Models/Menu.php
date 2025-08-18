@@ -23,7 +23,7 @@ class Menu extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    // Relationship with comments
+    
     public function comments()
     {
         return $this->hasMany(Comment::class);

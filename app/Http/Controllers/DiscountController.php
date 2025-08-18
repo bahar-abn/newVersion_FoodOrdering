@@ -14,7 +14,7 @@ class DiscountController extends Controller
 
         $discount = Discount::where('code', $request->discount_code)
     ->where(function ($q) {
-        $q->whereNull('valid_to')      // instead of valid_until
+        $q->whereNull('valid_to')      
           ->orWhere('valid_to', '>=', now());
     })
     ->first();

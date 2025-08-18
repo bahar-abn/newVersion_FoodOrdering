@@ -11,12 +11,9 @@ use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Admin\ReportController;
 
-// Homepage
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
-
-// Authentication Routes
 Route::controller(AuthController::class)->group(function () {
     Route::middleware('guest')->group(function () {
         Route::get('/login', 'showLoginForm')->name('login');
@@ -27,8 +24,6 @@ Route::controller(AuthController::class)->group(function () {
     
     Route::post('/logout', 'logout')->middleware('auth')->name('logout');
 });
-
-// Public Menu Routes
 Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
 Route::get('/menu/{menu}', [MenuController::class, 'show'])->name('menu.show');
 
@@ -42,8 +37,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/remove/{menu}', [CartController::class, 'remove'])->name('cart.remove');
         Route::post('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
     });
-
-    // Order Routes
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('orders.index');
         Route::post('/', [OrderController::class, 'store'])->name('orders.store');
@@ -55,8 +48,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{order}', [OrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/{order}/apply-discount', [DiscountController::class, 'apply'])->name('discount.apply');
     });
-
-    // Payment Routes
     Route::prefix('payment')->group(function () {
         Route::get('/{order}', [PaymentController::class, 'show'])->name('payment.form');
         Route::post('/{order}/process', [PaymentController::class, 'process'])->name('payment.process');
@@ -64,15 +55,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/{order}/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
         Route::post('/{order}/complete', [PaymentController::class, 'complete'])->name('payment.complete');
     });
-
-    // Feedback Routes
     Route::post('/menu/{menu}/rate', [SurveyController::class, 'store'])->name('survey.store');
     Route::post('/menu/{menu}/comment', [CommentController::class, 'store'])->name('comment.store');
 });
-
-/// Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Reports
     Route::get('/orders-report', [ReportController::class, 'ordersReport'])->name('orders');
     Route::get('/popular-food', [ReportController::class, 'popularFood'])->name('popular');
     Route::get('/payment-report', [ReportController::class, 'paymentReport'])->name('payments');
@@ -80,7 +66,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/comments/{comment}/approve', [ReportController::class, 'approveComment'])->name('comments.approve');
     Route::delete('/comments/{comment}/reject', [ReportController::class, 'rejectComment'])->name('comments.reject');
 
-    // Menu Management
     Route::prefix('menu')->group(function () {
         Route::get('/', [MenuController::class, 'adminIndex'])->name('menu.index');
         Route::get('/create', [MenuController::class, 'create'])->name('menu.create');

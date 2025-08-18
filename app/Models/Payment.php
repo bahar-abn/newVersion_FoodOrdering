@@ -12,11 +12,11 @@ class Payment extends Model
     protected $fillable = [
         'order_id',
         'amount',
-        'status', // e.g., 'completed', 'pending', 'failed'
-        'payment_method', // optional
+        'status', 
+        'payment_method', 
     ];
 
-    // Relationship with Order
+    
     public function order()
     {
         return $this->belongsTo(Order::class);

@@ -9,10 +9,7 @@ class MenuController extends Controller
 {
     public function index()
     {
-        // Get menu items with pagination (9 per page)
-        $items = Menu::paginate(9);
-
-        // Pass $items to Blade view
+                $items = Menu::paginate(9);
         return view('menu.index', compact('items'));
     }
 
@@ -22,7 +19,6 @@ class MenuController extends Controller
     }
     public function show(Menu $menu)
 {
-    // Remove the approved filter
     $comments = $menu->comments()->latest()->get();
     $surveys = $menu->surveys()->latest()->take(5)->get();
     
@@ -63,7 +59,7 @@ class MenuController extends Controller
     }
     public function adminIndex()
 {
-    // Instead of all(), use paginate()
+    
     $items = Menu::orderBy('created_at', 'desc')->paginate(9); // 9 items per page
     return view('menu.index', compact('items'));
 }

@@ -77,14 +77,14 @@ class PaymentController extends Controller
 }
 public function show(Order $order)
 {
-    // Make sure the authenticated user owns this order
+    
     if ($order->user_id !== auth()->id()) {
         abort(403, 'Unauthorized action.');
     }
 
-    // Load items with menu data
-    $order->load('items'); // Assuming Order model's items() relation is correctly defined
-    $items = $order->items; // Collection of items
+    
+    $order->load('items'); 
+    $items = $order->items; 
     $total = $order->total ?? 0;
 
     return view('payment.form', compact('order', 'items', 'total'));

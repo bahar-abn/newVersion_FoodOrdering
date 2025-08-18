@@ -7,7 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth; // Add this line
+use Illuminate\Support\Facades\Auth; 
 
 
 class OrderController extends Controller
@@ -21,7 +21,7 @@ class OrderController extends Controller
 
         return view('orders.index', compact('orders'));
     }
-    // Create a cart/order with items from request
+    
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -60,28 +60,27 @@ class OrderController extends Controller
 
             $order->update([
                 'subtotal' => $subtotal,
-                'total' => $subtotal, // discount can be applied later
+                'total' => $subtotal, 
             ]);
 
             return redirect("/payment/{$order->id}");
         });
     }
-    // OrderController.php
+    
 public function edit(Order $order)
 {
-    // Only allow editing pending orders
     if ($order->status !== 'pending') {
         abort(403, 'You can only edit pending orders');
     }
 
-    $menuItems = Menu::all(); // Get all menu items for adding new ones
+    $menuItems = Menu::all(); 
     
     return view('orders.edit', compact('order', 'menuItems'));
 }
 
 public function update(Request $request, Order $order)
 {
-    // Validate and process the order update
+  
     $validated = $request->validate([
         'items' => 'required|array',
         'items.*.quantity' => 'sometimes|integer|min:1',
@@ -90,15 +89,15 @@ public function update(Request $request, Order $order)
         'new_items.*.quantity' => 'sometimes|integer|min:1'
     ]);
 
-    // Process the order update (you'll need to implement this logic)
+    
     $order = DB::transaction(function () use ($order, $validated) {
-        // Update existing items
+        
         foreach ($validated['items'] as $itemId => $itemData) {
             if (isset($itemData['_delete'])) {
-                // Remove item
+                
                 $order->items()->where('id', $itemId)->delete();
             } else {
-                // Update quantity
+                
                 $order->items()->where('id', $itemId)->update([
                     'quantity' => $itemData['quantity'],
                     'line_total' => $itemData['quantity'] * $order->items()->find($itemId)->unit_price
@@ -106,7 +105,7 @@ public function update(Request $request, Order $order)
             }
         }
         
-        // Add new items
+        
         if (isset($validated['new_items'])) {
             foreach ($validated['new_items'] as $newItem) {
                 $menu = Menu::find($newItem['menu_id']);
@@ -119,7 +118,7 @@ public function update(Request $request, Order $order)
             }
         }
         
-        // Recalculate order totals
+        
         $order->recalculateTotals();
         
         return $order;
@@ -139,7 +138,7 @@ public function directOrder(Request $request)
     $user = $request->user();
 
     return DB::transaction(function () use ($validated, $user) {
-        // Calculate total first
+       
         $totalPrice = 0;
         $itemsWithPrices = [];
         
@@ -154,14 +153,12 @@ public function directOrder(Request $request)
             ];
         }
 
-        // Create the order with total_price
         $order = Order::create([
             'user_id' => $user->id,
             'status' => 'pending',
             'total_price' => $totalPrice
         ]);
 
-        // Add order items with prices
         foreach ($itemsWithPrices as $item) {
             OrderItem::create([
                 'order_id' => $order->id,
@@ -177,35 +174,30 @@ public function directOrder(Request $request)
 }
 public function show(Order $order)
 {
-    // Verify the authenticated user owns this order
     if ($order->user_id !== auth()->id()) {
         abort(403, 'Unauthorized action.');
     }
 
-    // Load the order with its items and menu information
     $order->load(['items.menu']);
 
     return view('orders.show', compact('order'));
 }
 public function reorder(Request $request, Order $order)
 {
-    // Verify the authenticated user owns this order
     if ($order->user_id !== auth()->id()) {
         abort(403, 'Unauthorized action.');
     }
 
-    // Load the order items with menu information
     $order->load(['items.menu']);
 
     return DB::transaction(function () use ($order, $request) {
-        // Create a new order based on the previous one
+       
         $newOrder = Order::create([
             'user_id' => $request->user()->id,
             'status' => 'pending',
             'total_price' => $order->total_price,
         ]);
 
-        // Copy all items from the original order
         foreach ($order->items as $item) {
             OrderItem::create([
                 'order_id' => $newOrder->id,
@@ -221,23 +213,19 @@ public function reorder(Request $request, Order $order)
 }
 public function cancel(Request $request, Order $order)
 {
-    // Verify the authenticated user owns this order
     if ($order->user_id !== auth()->id()) {
         abort(403, 'Unauthorized action.');
     }
 
-    // Only allow canceling pending orders
     if ($order->status !== 'pending') {
         return redirect()->route('orders.show', $order->id)
             ->with('error', 'Only pending orders can be canceled');
     }
 
     return DB::transaction(function () use ($order) {
-        // Update order status
         $order->status = 'cancelled';
         $order->save();
 
-        // Record cancellation in payment history if payment exists
         if ($order->paymentHistory) {
             PaymentHistory::create([
                 'order_id' => $order->id,
